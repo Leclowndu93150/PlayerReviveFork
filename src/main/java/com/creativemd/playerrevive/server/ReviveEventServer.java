@@ -21,6 +21,7 @@ import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
+import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -68,7 +69,6 @@ public class ReviveEventServer {
 		return Minecraft.getMinecraft().getIntegratedServer();
 	}
 
-
 	@SubscribeEvent
 	public void playerTick(PlayerTickEvent event) {
 		if (event.phase == Phase.START && event.side == Side.SERVER && isReviveActive()) {
@@ -83,7 +83,6 @@ public class ReviveEventServer {
 				if (revive.getTimeLeft() % 20 == 0)
 					PlayerReviveServer.sendUpdatePacket(player);
 
-				 
 				if (PlayerRevive.CONFIG.usePercentageHealth) {
 					float maxHealth = player.getMaxHealth();
 					float newHealth = maxHealth * (PlayerRevive.CONFIG.playerDownedHealthPercentage / 100.0f);
@@ -127,18 +126,39 @@ public class ReviveEventServer {
 
 			if (!revive.isHealty()) {
 				if (player.isSneaking()) {
-					 
 					player.openGui(PlayerRevive.instance,
 							PlayerReviveGuiHandler.GUI_DOWNED_INVENTORY,
 							player.world,
 							target.getEntityId(), 0, 0);
 					event.setCanceled(true);
 				} else if (!PlayerReviveServer.isPlayerBleeding(player)) {
-					 
 					NBTTagCompound nbt = new NBTTagCompound();
 					nbt.setString("uuid", EntityPlayer.getUUID(target.getGameProfile()).toString());
 					revive.getRevivingPlayers().add(player);
 					GuiHandler.openGui("plreviver", nbt, player);
+					event.setCanceled(true);
+				}
+			}
+		}
+	}
+
+	@SubscribeEvent
+	public void onAttackEntity(AttackEntityEvent event) {
+		if (event.getTarget() instanceof EntityPlayer && !event.getEntityPlayer().world.isRemote) {
+			EntityPlayer target = (EntityPlayer) event.getTarget();
+			EntityPlayer attacker = event.getEntityPlayer();
+			IRevival revive = PlayerReviveServer.getRevival(target);
+
+			if (!revive.isHealty()) {
+				float damage = (float) attacker.getEntityAttribute(net.minecraft.entity.SharedMonsterAttributes.ATTACK_DAMAGE).getAttributeValue();
+
+				/*
+				if (attacker.getHeldItemMainhand() != null) {
+					damage += net.minecraftforge.common.ForgeHooks.getEnchantPower(attacker.getInventory().armorInventory, attacker.getLastDamageSource());
+				}*/
+
+				if (target.getHealth() <= damage) {
+					PlayerReviveServer.kill(target);
 					event.setCanceled(true);
 				}
 			}
@@ -156,12 +176,6 @@ public class ReviveEventServer {
 						event.getSource() == DamageBledToDeath.bledToDeath ||
 						PlayerRevive.CONFIG.bypassDamageSources.contains(event.getSource().damageType)) {
 					event.setCanceled(true);
-				} else {
-					 
-					if (player.getHealth() - event.getAmount() <= 0) {
-						event.setCanceled(true);
-						PlayerReviveServer.kill(player);
-					}
 				}
 			}
 		}
@@ -180,10 +194,8 @@ public class ReviveEventServer {
 
 			PlayerReviveServer.startBleeding(player, event.getSource());
 
-			 
 			player.addPotionEffect(new PotionEffect(Potion.getPotionFromResourceLocation("resistance"), 100, 4));
 
-			 
 			if (PlayerRevive.CONFIG.usePercentageHealth) {
 				float maxHealth = player.getMaxHealth();
 				float newHealth = maxHealth * (PlayerRevive.CONFIG.playerDownedHealthPercentage / 100.0f);
