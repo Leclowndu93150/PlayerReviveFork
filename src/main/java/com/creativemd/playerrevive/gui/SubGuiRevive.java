@@ -38,27 +38,27 @@ public class SubGuiRevive extends SubGui {
 		IRevival revive = ((SubContainerRevive) container).revive;
 		bar = (GuiProgressBar) new GuiProgressBar("progress", 50, 0, 94, 13, PlayerRevive.CONFIG.playerReviveTime, revive.getProgress()).setStyle(defaultStyle);
 		controls.add(bar);
-		label = new GuiLabel(I18n.translateToLocalFormatted("playerrevive.gui.label.time_left", formatTime(revive.getTimeLeft())), 50, 20);
+		label = new GuiLabel("Time left " + formatTime(revive.getTimeLeft()), 50, 20);
 		controls.add(label);
 		if (!((SubContainerRevive) container).isHelping) {
 			
 			if (!PlayerRevive.CONFIG.disableGiveUp)
-				controls.add(new GuiButton(I18n.translateToLocal("playerrevive.gui.button.give_up"), 80, 80) {
+				controls.add(new GuiButton("Give Up", 80, 80) {
 					
 					@Override
 					public void onClicked(int x, int y, int button) {
 						
-						openYesNoDialog(I18n.translateToLocal("playerrevive.gui.popup.give_up"));
+						openYesNoDialog("Do you really want to give up?");
 					}
 				});
 			
 			if (!PlayerRevive.CONFIG.disableDisconnect)
-				controls.add(new GuiButton(I18n.translateToLocal("playerrevive.gui.button.disconnect"), 70, 100) {
+				controls.add(new GuiButton("Disconnect", 70, 100) {
 					
 					@Override
 					public void onClicked(int x, int y, int button) {
 						
-						openYesNoDialog(I18n.translateToLocal("playerrevive.gui.popup.disconnect"));
+						openYesNoDialog("Do you really want to disconnect?");
 					}
 				});
 			
@@ -66,7 +66,7 @@ public class SubGuiRevive extends SubGui {
 			chat.maxLength = 256;
 			controls.add(chat.setStyle(Style.liteStyle));
 			
-			controls.add(new GuiButton(I18n.translateToLocal("playerrevive.gui.button.send"), 170, 120, 23, 10) {
+			controls.add(new GuiButton("Send", 170, 120, 23, 10) {
 				
 				@Override
 				public void onClicked(int x, int y, int button) {
@@ -91,7 +91,7 @@ public class SubGuiRevive extends SubGui {
 	@Override
 	public void onDialogClosed(String text, String[] buttons, String clicked) {
 		if (clicked.equals("Yes")) {
-			if (text.equals(I18n.translateToLocal("playerrevive.gui.popup.give_up"))) {
+			if (text.equals("Do you really want to give up?")) {
 				NBTTagCompound nbt = new NBTTagCompound();
 				nbt.setBoolean("giveup", true);
 				sendPacketToServer(nbt);
@@ -172,7 +172,7 @@ public class SubGuiRevive extends SubGui {
 			revive.deserializeNBT(nbt);
 			bar.pos = revive.getProgress();
 			
-			label.setCaption(I18n.translateToLocalFormatted("playerrevive.gui.label.time_left", formatTime(revive.getTimeLeft())));
+			label.setCaption("Time left " + formatTime(revive.getTimeLeft()));
 		}
 	}
 	

@@ -17,6 +17,7 @@ import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
@@ -172,6 +173,12 @@ public class ReviveEventServer {
 			IRevival revive = PlayerReviveServer.getRevival(player);
 
 			if (!revive.isHealty()) {
+				if (player.getHealth() <= event.getAmount()) {
+					PlayerReviveServer.kill(player);
+					event.setCanceled(true);
+					return;
+				}
+
 				if (!PlayerRevive.CONFIG.allowDamageWhileBleeding ||
 						event.getSource() == DamageBledToDeath.bledToDeath ||
 						PlayerRevive.CONFIG.bypassDamageSources.contains(event.getSource().damageType)) {
@@ -194,7 +201,11 @@ public class ReviveEventServer {
 
 			PlayerReviveServer.startBleeding(player, event.getSource());
 
-			player.addPotionEffect(new PotionEffect(Potion.getPotionFromResourceLocation("resistance"), 100, 4));
+			if (PlayerRevive.CONFIG.resistanceTime > 0 && PlayerRevive.CONFIG.resistanceStrength >= 0) {
+				player.addPotionEffect(new PotionEffect(Potion.getPotionFromResourceLocation("resistance"),
+						PlayerRevive.CONFIG.resistanceTime,
+						PlayerRevive.CONFIG.resistanceStrength));
+			}
 
 			if (PlayerRevive.CONFIG.usePercentageHealth) {
 				float maxHealth = player.getMaxHealth();
@@ -218,7 +229,7 @@ public class ReviveEventServer {
 			event.setCanceled(true);
 
 			if (!PlayerRevive.CONFIG.disableBleedingMessage)
-				player.getServer().getPlayerList().sendMessage(new TextComponentTranslation("playerrevive.chat.bleeding", player.getDisplayNameString()));
+				player.getServer().getPlayerList().sendMessage(new TextComponentString(player.getDisplayNameString() + " is bleeding..."));
 		}
 	}
 

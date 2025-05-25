@@ -65,4 +65,15 @@ public class PlayerReviveConfig {
 	@CreativeConfig
 	public boolean allowDamageWhileBleeding = true;
 
+	@CreativeConfig
+	public List<String> blacklistedItems = Arrays.asList("minecraft:bedrock");
+
+	@CreativeConfig
+	@CreativeConfig.IntRange(min = 0, max = 6000)
+	public int resistanceTime = 100;
+
+	@CreativeConfig
+	@CreativeConfig.IntRange(min = 0, max = 4)
+	public int resistanceStrength = 4;
+
 }
